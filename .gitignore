@@ -1,0 +1,10 @@
+dist/
+build/
+*.exe
+*.spec
+__pycache__/
+*.pyc
+*.pkg
+*.dll
+git-filter-repo/
+.DS_Store
