@@ -7,7 +7,11 @@ class StorageManager:
     def __init__(self):
         self.data = {
             "history": [],
-            "playlists": {}
+            "playlists": {},
+            "preferences": {
+                "languages": ["Hindi"], # Default
+                "last_searches": []
+            }
         }
         self.load_data()
 
@@ -15,9 +19,11 @@ class StorageManager:
         if os.path.exists(DATA_FILE):
             try:
                 with open(DATA_FILE, 'r') as f:
-                    self.data = json.load(f)
+                    saved = json.load(f)
+                    # Merge to ensure new keys (preferences) exist
+                    self.data.update(saved)
             except:
-                pass # Start fresh if corrupt
+                pass
 
     def save_data(self):
         try:
@@ -29,16 +35,9 @@ class StorageManager:
     def add_to_history(self, video):
         # Avoid duplicates at the top
         history = self.data["history"]
-        
-        # Remove if exists already to move to top
         history = [v for v in history if v['id'] != video['id']]
-        
         history.insert(0, video)
-        
-        # Limit history to 50 items
-        if len(history) > 50:
-            history.pop()
-            
+        if len(history) > 50: history.pop()
         self.data["history"] = history
         self.save_data()
 
@@ -47,19 +46,14 @@ class StorageManager:
 
     def create_playlist(self, name):
         if name not in self.data["playlists"]:
-            self.data["playlists"][name] = []
-            self.save_data()
-            return True
+            self.data["playlists"][name] = []; self.save_data(); return True
         return False
 
     def add_to_playlist(self, playlist_name, video):
         if playlist_name in self.data["playlists"]:
-            # Check for duplicate
             playlist = self.data["playlists"][playlist_name]
             if not any(v['id'] == video['id'] for v in playlist):
-                playlist.append(video)
-                self.save_data()
-                return True
+                playlist.append(video); self.save_data(); return True
         return False
 
     def get_playlists(self):
@@ -67,7 +61,19 @@ class StorageManager:
 
     def remove_from_playlist(self, playlist_name, video_id):
         if playlist_name in self.data["playlists"]:
-            self.data["playlists"][playlist_name] = [
-                v for v in self.data["playlists"][playlist_name] if v['id'] != video_id
-            ]
+            self.data["playlists"][playlist_name] = [v for v in self.data["playlists"][playlist_name] if v['id'] != video_id]
             self.save_data()
+            
+    def get_preferences(self):
+        return self.data.get("preferences", {"languages": ["Hindi"], "last_searches": []})
+        
+    def update_languages(self, languages):
+        self.data["preferences"]["languages"] = languages
+        self.save_data()
+        
+    def add_search_term(self, term):
+        searches = self.data["preferences"].get("last_searches", [])
+        if term in searches: searches.remove(term)
+        searches.insert(0, term)
+        self.data["preferences"]["last_searches"] = searches[:5] # Keep last 5
+        self.save_data()
