@@ -54,8 +54,8 @@ class RotatingAlbumArt(QWidget):
             
             gradient = QRadialGradient(QPointF(center), wave_radius)
             # Rotating colors based on angle
-            c1 = QColor("#BB86FC")
-            c2 = QColor("#985EFF")
+            c1 = QColor("#FFD700")  # Pikachu Yellow
+            c2 = QColor("#00E5FF")  # Electric Cyan
             
             gradient.setColorAt(0.7, Qt.GlobalColor.transparent)
             gradient.setColorAt(0.9, c1 if (self.angle // 45) % 2 == 0 else c2)
@@ -147,7 +147,7 @@ class BarVisualizer(QWidget):
         h = self.height()
         bar_width = w / self.bar_count
         
-        c1 = QColor("#BB86FC")
+        c1 = QColor("#FFD700")
         
         painter.setBrush(QBrush(c1))
         painter.setPen(Qt.PenStyle.NoPen)

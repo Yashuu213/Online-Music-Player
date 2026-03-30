@@ -2,14 +2,14 @@ import yt_dlp
 
 class YouTubeClient:
     def __init__(self):
-        self.ydl_opts_search = {
+        # Base options
+        self.ydl_opts_base = {
             'format': 'bestaudio/best',
             'noplaylist': True,
-            'quiet': False, # Turn on logging
-            'extract_flat': 'in_playlist',  # Better for search results
-            'default_search': 'ytsearch10', 
+            'quiet': True,
+            'extract_flat': True,
             'ignoreerrors': True,
-            'no_warnings': False,
+            'no_warnings': True,
         }
         
         self.ydl_opts_stream = {
@@ -19,52 +19,46 @@ class YouTubeClient:
             'key': 'FFmpegExtractAudio',
         }
 
-    def search(self, query):
+    def search(self, query, limit=15):
         """
-        Searches YouTube for the query and returns a list of results.
+        Searches YouTube and attempts to categorize results (Artists vs Songs).
         """
         results = []
+        opts = self.ydl_opts_base.copy()
+        
         try:
-            print(f"DEBUG: Searching for '{query}' using yt-dlp...")
-            with yt_dlp.YoutubeDL(self.ydl_opts_search) as ydl:
-                # Force ytsearch explicitly in the query if not already there, 
-                # though default_search should handle it.
-                info = ydl.extract_info(f"ytsearch10:{query}", download=False)
-                
-                print(f"DEBUG: Search finished. Info keys: {info.keys() if info else 'None'}")
+            print(f"DEBUG: Categorized search for '{query}' (Limit: {limit})...")
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                # Use ytsearchX for videos
+                info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
                 
                 if info and 'entries' in info:
-                    entries = list(info['entries']) # consume generator if it is one
-                    print(f"DEBUG: Entries found: {len(entries)}")
-                    
-                    for entry in entries:
+                    for entry in info['entries']:
                         if not entry: continue
-                        # print(f"DEBUG: Entry keys: {entry.keys()}")
                         
+                        is_artist = False
+                        # Channel/Artist detection: Check for 'channel_url' or specific extractor keys
+                        if entry.get('_type') == 'url' and 'channel' in entry.get('url', ''):
+                            is_artist = True
+                        elif entry.get('ie_key') == 'YoutubeChannel':
+                             is_artist = True
+
                         results.append({
                             'id': entry.get('id'),
-                            'title': entry.get('title'),
+                            'title': entry.get('title', 'Unknown'),
                             'url': entry.get('url') if entry.get('url') else f"https://www.youtube.com/watch?v={entry.get('id')}",
                             'duration': entry.get('duration'),
-                            'thumbnail': entry.get('thumbnail') or f"https://img.youtube.com/vi/{entry.get('id')}/mqdefault.jpg"
+                            'thumbnail': entry.get('thumbnail') or f"https://img.youtube.com/vi/{entry.get('id')}/mqdefault.jpg",
+                            'is_artist': is_artist,
+                            'uploader': entry.get('uploader')
                         })
-                else:
-                    print("DEBUG: No 'entries' key in info.")
-                    if info:
-                        print(f"DEBUG: Info dump: {str(info)[:200]}...")
-
         except Exception as e:
             print(f"Error searching: {e}")
-            import traceback
-            traceback.print_exc()
             
         print(f"DEBUG: Returning {len(results)} results")
         return results
 
     def get_stream_url(self, video_url):
-        """
-        Getting the actual stream URL for a video.
-        """
         try:
             with yt_dlp.YoutubeDL(self.ydl_opts_stream) as ydl:
                 info = ydl.extract_info(video_url, download=False)
