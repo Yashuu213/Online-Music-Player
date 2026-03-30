@@ -1,8 +1,10 @@
 import yt_dlp
+import datetime
+import time
 
 class YouTubeClient:
     def __init__(self):
-        # Base options
+        # Base options optimized for speed
         self.ydl_opts_base = {
             'format': 'bestaudio/best',
             'noplaylist': True,
@@ -10,26 +12,53 @@ class YouTubeClient:
             'extract_flat': True,
             'ignoreerrors': True,
             'no_warnings': True,
+            'no_check_certificate': True,
+            'prefer_insecure': True,
         }
         
         self.ydl_opts_stream = {
             'format': 'bestaudio/best',
             'noplaylist': True,
             'quiet': True,
-            'key': 'FFmpegExtractAudio',
+            'no_warnings': True,
+            'ignoreerrors': True,
+            'nocheckcertificate': True,
+            'extract_flat': False, # Need full info for stream
+            'prefer_insecure': True,
+            'add_header': [('User-Agent', 'Mozilla/5.0')],
         }
 
-    def search(self, query, limit=15):
+        # Memory Cache: { "query_str": (results, timestamp) }
+        self._cache = {}
+        self._cache_expiry = 600 # 10 minutes
+
+    def search(self, query, limit=15, is_trending=False):
         """
         Searches YouTube and attempts to categorize results (Artists vs Songs).
+        If is_trending is True, it filters for results from the last 30 days.
+        Uses in-memory caching to prevent redundant network hits.
         """
+        # Create a unique cache key based on query, limit, and trending status
+        cache_key = f"{query}_{limit}_{is_trending}"
+        curr_time = time.time()
+
+        if cache_key in self._cache:
+            results, timestamp = self._cache[cache_key]
+            if curr_time - timestamp < self._cache_expiry:
+                print(f"DEBUG: Cache HIT for '{query}'")
+                return results
+
         results = []
         opts = self.ydl_opts_base.copy()
         
+        if is_trending:
+            # Only results from the last 30 days
+            thirty_days_ago = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y%m%d')
+            opts['daterange'] = yt_dlp.utils.DateRange(start=thirty_days_ago)
+
         try:
-            print(f"DEBUG: Categorized search for '{query}' (Limit: {limit})...")
+            print(f"DEBUG: Fetching NEW results for '{query}'...")
             with yt_dlp.YoutubeDL(opts) as ydl:
-                # Use ytsearchX for videos
                 info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
                 
                 if info and 'entries' in info:
@@ -37,7 +66,6 @@ class YouTubeClient:
                         if not entry: continue
                         
                         is_artist = False
-                        # Channel/Artist detection: Check for 'channel_url' or specific extractor keys
                         if entry.get('_type') == 'url' and 'channel' in entry.get('url', ''):
                             is_artist = True
                         elif entry.get('ie_key') == 'YoutubeChannel':
@@ -52,6 +80,15 @@ class YouTubeClient:
                             'is_artist': is_artist,
                             'uploader': entry.get('uploader')
                         })
+            
+            # Store in cache
+            if results:
+                self._cache[cache_key] = (results, curr_time)
+                # Cleanup cache if it grows too large
+                if len(self._cache) > 100:
+                    sorted_keys = sorted(self._cache.keys(), key=lambda k: self._cache[k][1])
+                    for k in sorted_keys[:20]: del self._cache[k]
+
         except Exception as e:
             print(f"Error searching: {e}")
             
