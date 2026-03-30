@@ -1,6 +1,24 @@
 {
     "history": [
         {
+            "duration": 239.0,
+            "id": "hoNb6HuNmU0",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/hoNb6HuNmU0/mqdefault.jpg",
+            "title": "Full Song: KHAIRIYAT (BONUS TRACK) | CHHICHHORE | Sushant, Shraddha | Pritam, Amitabh B|Arijit Singh",
+            "uploader": "T-Series",
+            "url": "https://www.youtube.com/watch?v=hoNb6HuNmU0"
+        },
+        {
+            "duration": null,
+            "id": "28KRPhVzCus",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/28KRPhVzCus/mqdefault.jpg",
+            "title": "lofi hip hop radio \ud83d\udca4 beats to sleep/chill to",
+            "uploader": "Lofi Girl",
+            "url": "https://www.youtube.com/watch?v=28KRPhVzCus"
+        },
+        {
             "duration": 340.0,
             "id": "MV0OSLPKltQ",
             "is_artist": false,
@@ -427,10 +445,10 @@
             "Hindi"
         ],
         "last_searches": [
+            "tum jo aaye ",
             "mari mata na pagl",
             "tum jo aaye jin",
             "tum jo aaye jindgi me ",
-            "tum jo aaye ",
             "tum "
         ]
     }

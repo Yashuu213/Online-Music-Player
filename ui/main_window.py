@@ -174,24 +174,48 @@ class MainWindow(QMainWindow):
         for t, q, c, tr in rows: self.add_dynamic_row(t, q, c, self.home_rows_layout, tr)
         
         art_h = QLabel("Explore Your Favorite Artists 🎤"); art_h.setObjectName("SectionHeader"); self.home_rows_layout.addWidget(art_h)
-        a_s = QScrollArea(); a_s.setFixedHeight(210); a_s.setWidgetResizable(True); a_s.setStyleSheet("background: transparent; border: none;"); a_c = QWidget(); a_l = QHBoxLayout(a_c); a_l.setContentsMargins(0,0,0,0); a_l.setSpacing(15); ads = [("Arijit Singh", "https://i.scdn.co/image/ab6761610000e5eb12810de09aef82b3c2069670"), ("Atif Aslam", "https://i.scdn.co/image/ab6761610000e5eb748805f42f53d71221fcc232"), ("Shreya Ghoshal", "https://i.scdn.co/image/ab6761610000e5eb7ed821e25e9acc8a2fb3a4d9"), ("Alka Yagnik", "https://i.scdn.co/image/ab6761610000e5eb46059c393bcaf146e4544760"), ("Honey Singh", "https://i.scdn.co/image/ab6761610000e5ebcc7517973d47ad8fcfcb7fb4"), ("Jubin Nautiyal", "https://i.scdn.co/image/ab6761610000e5eb4270d49489ef0cbcf3ca5932")]
-        random.shuffle(ads); [ (a_l.addWidget(ArtistCardWidget(n)), self.active_threads.append(ThumbnailLoader(a_l.itemAt(a_l.count()-1).widget(), u, f"Artist_{n}")), self.active_threads[-1].thumbnail_loaded.connect(self.on_artist_image_loaded), self.active_threads[-1].start()) for n, u in ads[:6] ]; a_l.addStretch(); a_s.setWidget(a_c); self.home_rows_layout.addWidget(a_s)
+        a_s = QScrollArea(); a_s.setFixedHeight(210); a_s.setWidgetResizable(True); a_s.setStyleSheet("background: transparent; border: none;")
+        a_c = QWidget(); a_l = QHBoxLayout(a_c); a_l.setContentsMargins(0,0,0,0); a_l.setSpacing(15)
+        ads = [("Arijit Singh", "https://i.scdn.co/image/ab6761610000e5eb12810de09aef82b3c2069670"), ("Atif Aslam", "https://i.scdn.co/image/ab6761610000e5eb748805f42f53d71221fcc232"), ("Shreya Ghoshal", "https://i.scdn.co/image/ab6761610000e5eb7ed821e25e9acc8a2fb3a4d9"), ("Alka Yagnik", "https://i.scdn.co/image/ab6761610000e5eb46059c393bcaf146e4544760"), ("Honey Singh", "https://i.scdn.co/image/ab6761610000e5ebcc7517973d47ad8fcfcb7fb4"), ("Jubin Nautiyal", "https://i.scdn.co/image/ab6761610000e5eb4270d49489ef0cbcf3ca5932")]
+        random.shuffle(ads)
+        for n, u in ads[:6]:
+            w = ArtistCardWidget(n); a_l.addWidget(w)
+            lo = ThumbnailLoader(w, u, f"Artist_{n}")
+            lo.thumbnail_loaded.connect(self.on_artist_image_loaded)
+            lo.finished.connect(lambda t_obj=lo: self.cleanup_thread(t_obj))
+            self.active_threads.append(lo); lo.start()
+        a_l.addStretch(); a_s.setWidget(a_c); self.home_rows_layout.addWidget(a_s)
         
         for art, _ in top_artists[:1]: self.add_dynamic_row(f"Magic from {art} ✨", f"{art} greatest hits mix {random.choice(seeds)}", f"home_{art.lower().replace(' ', '_')}", self.home_rows_layout)
         
         his_h = QLabel("Recently Played"); his_h.setObjectName("SectionHeader"); self.home_rows_layout.addWidget(his_h); self.his_scroll = self.create_row_scroll(); self.his_layout = self.his_scroll.widget().layout(); self.home_rows_layout.addWidget(self.his_scroll); self.load_history(); self.home_rows_layout.addStretch()
 
     def add_dynamic_row(self, title, query, context, layout, is_trending=False):
-        h = QLabel(title); h.setObjectName("SectionHeader"); layout.addWidget(h); s = self.create_row_scroll(); s.setProperty("context", context); layout.addWidget(s); t = SearchThread(self.youtube_client, query, context=context, limit=12, is_trending=is_trending); t.results_found.connect(self.on_search_results); t.finished.connect(lambda: self.cleanup_thread(t)); self.active_threads.append(t); t.start()
+        h = QLabel(title); h.setObjectName("SectionHeader"); layout.addWidget(h); s = self.create_row_scroll(); s.setProperty("context", context); layout.addWidget(s); t = SearchThread(self.youtube_client, query, context=context, limit=12, is_trending=is_trending); t.results_found.connect(self.on_search_results); t.finished.connect(lambda t_obj=t: self.cleanup_thread(t_obj)); self.active_threads.append(t); t.start()
 
     def cleanup_thread(self, t):
-        # We stop removing them immediately to prevent QThread GC crashes on Windows
-        pass 
+        if not t: return
+        # Delayed removal from active_threads to prevent QThread destruction crashes on Windows
+        QTimer.singleShot(2000, lambda: self._safe_remove_thread(t))
+
+    def _safe_remove_thread(self, t):
+        if t in self.active_threads:
+            try: self.active_threads.remove(t)
+            except: pass
+        try: t.deleteLater()
+        except: pass
+
+    def update_ambient_glow(self, pixmap):
+        if pixmap and not pixmap.isNull():
+            # Super-fast average color sampling
+            img = pixmap.toImage().scaled(1, 1, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.FastTransformation)
+            color = QColor(img.pixelColor(0, 0))
+            self.now_playing_page.set_ambient_color(color)
 
     def start_search(self, q=None):
         if not q: q = self.search_input.text()
         if not q or len(q) < 3: (self.search_rec_scroll.show(), self.results_list.hide(), self.loading_label.hide(), self.results_list.clear()); return
-        self.search_rec_scroll.hide(); self.results_list.show(); self.loading_label.show(); self.storage.add_search_term(q); self.loading_label.setText(f"Searching for '{q}'..."); self.search_thread = SearchThread(self.youtube_client, q, context="search", limit=25); self.search_thread.results_found.connect(self.on_search_results); self.search_thread.finished.connect(lambda: self.cleanup_thread(self.search_thread)); self.active_threads.append(self.search_thread); self.search_thread.start()
+        self.search_rec_scroll.hide(); self.results_list.show(); self.loading_label.show(); self.storage.add_search_term(q); self.loading_label.setText(f"Searching for '{q}'..."); self.search_thread = SearchThread(self.youtube_client, q, context="search", limit=25); self.search_thread.results_found.connect(self.on_search_results); self.search_thread.finished.connect(lambda t_obj=self.search_thread: self.cleanup_thread(t_obj)); self.active_threads.append(self.search_thread); self.search_thread.start()
 
     def get_top_artists_from_history(self):
         hist = self.storage.get_history()
@@ -298,7 +322,7 @@ class MainWindow(QMainWindow):
         self.stream_thread = StreamUrlThread(self.youtube_client, v); self.stream_thread.url_found.connect(self.on_stream_url_ready); self.stream_thread.finished.connect(lambda t_obj=self.stream_thread: self.cleanup_thread(t_obj)); self.active_threads.append(self.stream_thread); self.stream_thread.start()
         
         art = v.get('title', '').split(' - ')[0] if ' - ' in v.get('title', '') else v.get('uploader', 'Unknown'); song = v.get('title', '').split(' - ')[1] if ' - ' in v.get('title', '') else v.get('title', 'Unknown')
-        ly_th = LyricsThread(self.lyrics_engine, art, song); ly_th.lyrics_found.connect(self.now_playing_page.update_lyrics); ly_th.finished.connect(lambda: self.cleanup_thread(ly_th)); self.active_threads.append(ly_th); ly_th.start()
+        ly_th = LyricsThread(self.lyrics_engine, art, song); ly_th.lyrics_found.connect(self.now_playing_page.update_lyrics); ly_th.finished.connect(lambda t_obj=ly_th: self.cleanup_thread(t_obj)); self.active_threads.append(ly_th); ly_th.start()
 
     def on_stream_url_ready(self, url, title, video_id):
         # Only play if this is still the current video (Race protection)

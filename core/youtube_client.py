@@ -2,6 +2,11 @@ import yt_dlp
 import datetime
 import time
 
+class YDLLogger:
+    def debug(self, msg): pass
+    def warning(self, msg): pass
+    def error(self, msg): print(f"YT Error: {msg}")
+
 class YouTubeClient:
     def __init__(self):
         # Base options optimized for speed
@@ -12,8 +17,8 @@ class YouTubeClient:
             'extract_flat': True,
             'ignoreerrors': True,
             'no_warnings': True,
-            'no_check_certificate': True,
-            'prefer_insecure': True,
+            'nocheckcertificate': True,
+            'logger': YDLLogger(),
         }
         
         self.ydl_opts_stream = {
@@ -23,9 +28,8 @@ class YouTubeClient:
             'no_warnings': True,
             'ignoreerrors': True,
             'nocheckcertificate': True,
-            'extract_flat': False, # Need full info for stream
-            'prefer_insecure': True,
-            'add_header': [('User-Agent', 'Mozilla/5.0')],
+            'extract_flat': False,
+            'logger': YDLLogger(),
         }
 
         # Memory Cache: { "query_str": (results, timestamp) }
