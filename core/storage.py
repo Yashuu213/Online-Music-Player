@@ -59,6 +59,12 @@ class StorageManager:
     def get_playlists(self):
         return self.data["playlists"]
 
+    def delete_playlist(self, name):
+        if name in self.data["playlists"]:
+            del self.data["playlists"][name]
+            self.save_data(); return True
+        return False
+
     def remove_from_playlist(self, playlist_name, video_id):
         if playlist_name in self.data["playlists"]:
             self.data["playlists"][playlist_name] = [v for v in self.data["playlists"][playlist_name] if v['id'] != video_id]

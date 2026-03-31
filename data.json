@@ -1,6 +1,42 @@
 {
     "history": [
         {
+            "duration": 2878.0,
+            "id": "yszisrGQsmY",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/yszisrGQsmY/mqdefault.jpg",
+            "title": "Bollywood Dance Hits (Video Jukebox) | Non - Stop Party Songs | Bollywood Dance Songs | T-Series",
+            "uploader": "T-Series",
+            "url": "https://www.youtube.com/watch?v=yszisrGQsmY"
+        },
+        {
+            "duration": 78.0,
+            "id": "B1gXDErEaIg",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/B1gXDErEaIg/mqdefault.jpg",
+            "title": "\ud83c\udfb5 Top 10 Hindi Songs - March 2026 | New Bollywood & Indie Hits (Holi Special)",
+            "uploader": "Taha ..",
+            "url": "https://www.youtube.com/watch?v=B1gXDErEaIg"
+        },
+        {
+            "duration": 45.0,
+            "id": "ctbsR2557AA",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/ctbsR2557AA/mqdefault.jpg",
+            "title": "Peddi Pehelwan Glimpse (Hindi) | Ram Charan | Janhvi Kapoor | A R Rahman | Buchi Babu Sana",
+            "uploader": "T-Series",
+            "url": "https://www.youtube.com/watch?v=ctbsR2557AA"
+        },
+        {
+            "duration": 4491.0,
+            "id": "jnlQLjG_6mE",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/jnlQLjG_6mE/mqdefault.jpg",
+            "title": "TOP 20 Songs of NEFFEX \ud83d\udd25 Best Workout Music 2024 \ud83d\udd25 Workout Motivation Music 2024",
+            "uploader": "Workout Music",
+            "url": "https://www.youtube.com/watch?v=jnlQLjG_6mE"
+        },
+        {
             "duration": 239.0,
             "id": "hoNb6HuNmU0",
             "is_artist": false,
@@ -379,46 +415,9 @@
             "thumbnail": "https://img.youtube.com/vi/kfKP4o-bXzM/mqdefault.jpg",
             "title": "Kaavish - Tere Pyaar Main",
             "url": "https://www.youtube.com/watch?v=kfKP4o-bXzM"
-        },
-        {
-            "duration": 180.0,
-            "id": "eizmCZv3aKI",
-            "thumbnail": "https://img.youtube.com/vi/eizmCZv3aKI/mqdefault.jpg",
-            "title": "Brown Rang | Yo Yo Honey Singh | Full Song | Latest Punjabi Song 2024",
-            "url": "https://www.youtube.com/watch?v=eizmCZv3aKI"
-        },
-        {
-            "duration": 5060.0,
-            "id": "ovwwehTpaK8",
-            "thumbnail": "https://img.youtube.com/vi/ovwwehTpaK8/mqdefault.jpg",
-            "title": "Top hits 2024 playlist  ~ Trending music 2024 ~ Best songs 2024 updated weekly (Playlist Hits)",
-            "url": "https://www.youtube.com/watch?v=ovwwehTpaK8"
-        },
-        {
-            "duration": 256.0,
-            "id": "IMg_UUJVpMo",
-            "thumbnail": "https://img.youtube.com/vi/IMg_UUJVpMo/mqdefault.jpg",
-            "title": "Tere Pyaar Mein (Full Video) Tu Jhoothi Main Makkaar| Ranbir,Shraddha| Pritam|Arijit,Nikhita,Amitabh",
-            "url": "https://www.youtube.com/watch?v=IMg_UUJVpMo"
-        },
-        {
-            "duration": 9362.0,
-            "id": "fGPSs1PLc9o",
-            "thumbnail": "https://img.youtube.com/vi/fGPSs1PLc9o/mqdefault.jpg",
-            "title": "Spotify VIRAL Music 2025 ~ Top Spotify Songs Mix \ud83c\udfa7 Trending Songs 2025 ~ Best Pop Hits Playlist 2025",
-            "url": "https://www.youtube.com/watch?v=fGPSs1PLc9o"
         }
     ],
     "playlists": {
-        "Old": [
-            {
-                "duration": 487.0,
-                "id": "xdZiUuwZeOI",
-                "thumbnail": "https://img.youtube.com/vi/xdZiUuwZeOI/mqdefault.jpg",
-                "title": "Hum Tere Pyar Mein Sara Aalam Kho Baithe Cover | Akanksha Grover | Lata Mangeshkar | Dil Ek Mandir",
-                "url": "https://www.youtube.com/watch?v=xdZiUuwZeOI"
-            }
-        ],
         "My ": [
             {
                 "duration": 221.0,
@@ -445,11 +444,11 @@
             "Hindi"
         ],
         "last_searches": [
-            "tum jo aaye ",
-            "mari mata na pagl",
-            "tum jo aaye jin",
             "tum jo aaye jindgi me ",
-            "tum "
+            "mari mata na pagl",
+            "tum ",
+            "tum jo aaye jin",
+            "tum jo aaye "
         ]
     }
 }

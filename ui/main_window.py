@@ -19,7 +19,7 @@ from ui.styles import PREMIUM_PIKACHU_THEME
 from ui.now_playing import NowPlayingWidget
 from ui.custom_widgets import SongItemWidget, SongCardWidget, ArtistCardWidget, PlaylistCardWidget
 from ui.icons import get_icon, SVG_SEARCH, SVG_HOME, SVG_LIBRARY, SVG_CHEVRON_LEFT, SVG_TRENDING
-from ui.modals import ModernInputDialog, ModernSelectionDialog
+from ui.modals import ModernInputDialog, ModernSelectionDialog, ModernConfirmDialog
 from core.youtube_client import YouTubeClient
 from core.audio_player import AudioPlayer
 from core.storage import StorageManager
@@ -255,8 +255,17 @@ class MainWindow(QMainWindow):
     def load_library_playlists(self):
         self.clear_layout(self.lib_grid_layout); playlists = self.storage.get_playlists()
         for name, tracks in playlists.items():
-            card = PlaylistCardWidget(name, len(tracks)); card.clicked.connect(self.load_playlist_items_premium); self.lib_grid_layout.addWidget(card)
+            card = PlaylistCardWidget(name, len(tracks))
+            card.clicked.connect(self.load_playlist_items_premium)
+            card.delete_clicked.connect(self.confirm_delete_playlist)
+            self.lib_grid_layout.addWidget(card)
         self.lib_grid_layout.addStretch()
+
+    def confirm_delete_playlist(self, name):
+        dlg = ModernConfirmDialog("Delete Collection", f"Are you sure you want to permanently remove the high-class collection '{name}'?", self)
+        if dlg.exec():
+            if self.storage.delete_playlist(name):
+                self.load_library_playlists()
 
     def load_playlist_items_premium(self, name):
         self.playlist_title.setText(name); self.lib_tracks.clear(); tracks = self.storage.get_playlists().get(name, [])
@@ -316,9 +325,13 @@ class MainWindow(QMainWindow):
         self.load_history(); self.fetch_recommendations(v); self.now_playing_page.update_info(v, pix); self.switch_to_now_playing()
         
         # Stream Extraction with Race Protection
-        if hasattr(self, 'stream_thread') and self.stream_thread.isRunning():
-            try: self.stream_thread.url_found.disconnect()
-            except: pass
+        try:
+            if hasattr(self, 'stream_thread') and self.stream_thread:
+                # Disconnect to prevent old stream results from playing
+                try: self.stream_thread.url_found.disconnect()
+                except: pass
+        except RuntimeError:
+            self.stream_thread = None
         self.stream_thread = StreamUrlThread(self.youtube_client, v); self.stream_thread.url_found.connect(self.on_stream_url_ready); self.stream_thread.finished.connect(lambda t_obj=self.stream_thread: self.cleanup_thread(t_obj)); self.active_threads.append(self.stream_thread); self.stream_thread.start()
         
         art = v.get('title', '').split(' - ')[0] if ' - ' in v.get('title', '') else v.get('uploader', 'Unknown'); song = v.get('title', '').split(' - ')[1] if ' - ' in v.get('title', '') else v.get('title', 'Unknown')

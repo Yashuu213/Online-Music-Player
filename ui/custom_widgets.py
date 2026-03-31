@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPropertyAnimation, QEasingCurve, QRect
 from PyQt6.QtGui import QPainter, QBrush, QPixmap, QColor
-from ui.icons import get_icon, SVG_ADD, SVG_LIBRARY
+from ui.icons import get_icon, SVG_ADD, SVG_LIBRARY, SVG_DELETE
 
 class SongItemWidget(QWidget):
     """Horizontal list item for search results and history."""
@@ -112,6 +112,7 @@ class ArtistCardWidget(QFrame):
 class PlaylistCardWidget(QFrame):
     """Modern Grid Card for Playlists."""
     clicked = pyqtSignal(str) # playlist name
+    delete_clicked = pyqtSignal(str) # playlist name
     
     def __init__(self, name, count=0):
         super().__init__()
@@ -120,9 +121,31 @@ class PlaylistCardWidget(QFrame):
         self.init_ui()
         
     def init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(15, 20, 15, 15)
-        layout.setSpacing(12)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(15, 20, 15, 15)
+        self.layout.setSpacing(12)
+        
+        # Absolute Delete Button (Floating Badge Style)
+        self.del_btn = QPushButton(self)
+        self.del_btn.setIcon(get_icon(SVG_DELETE, "#FFFFFF"))
+        self.del_btn.setIconSize(QSize(14, 14))
+        self.del_btn.setFixedSize(26, 26)
+        self.del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.del_btn.setStyleSheet("""
+            QPushButton { 
+                background: #EF4444; 
+                border: 2px solid #0F172A; 
+                border-radius: 13px; 
+            } 
+            QPushButton:hover { 
+                background: #F87171; 
+                transform: scale(1.1); 
+            }
+        """)
+        # Position at the very top right corner
+        self.del_btn.move(155, -5) 
+        self.del_btn.clicked.connect(lambda: self.delete_clicked.emit(self.name))
+        self.del_btn.raise_() # Ensure it's on top
         
         # Modern Playlist Icon (Music Library)
         self.icon_label = QLabel()
@@ -135,19 +158,19 @@ class PlaylistCardWidget(QFrame):
             border: 1px solid rgba(255, 215, 0, 0.1);
         """)
         self.icon_label.setPixmap(get_icon(SVG_LIBRARY, "#FFD700").pixmap(64, 64))
-        layout.addWidget(self.icon_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.icon_label, alignment=Qt.AlignmentFlag.AlignCenter)
         
         self.name_label = QLabel(self.name)
         self.name_label.setStyleSheet("font-weight: 800; font-size: 15px; color: #FFF;")
         self.name_label.setWordWrap(True); self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.name_label)
+        self.layout.addWidget(self.name_label)
         
         self.count_label = QLabel(f"{self.count} Songs")
         self.count_label.setStyleSheet("color: #00E5FF; font-weight: 700; font-size: 12px; letter-spacing: 1px;")
         self.count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.count_label)
+        self.layout.addWidget(self.count_label)
         
-        layout.addStretch()
+        self.layout.addStretch()
 
     def mousePressEvent(self, event):
         self.clicked.emit(self.name)

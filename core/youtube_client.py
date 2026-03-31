@@ -38,11 +38,9 @@ class YouTubeClient:
 
     def search(self, query, limit=15, is_trending=False):
         """
-        Searches YouTube and attempts to categorize results (Artists vs Songs).
-        If is_trending is True, it filters for results from the last 30 days.
-        Uses in-memory caching to prevent redundant network hits.
+        Searches YouTube and prioritizes MUSICAL content.
+        Uses flat extraction for maximum speed and applies soft heuristics for filtering.
         """
-        # Create a unique cache key based on query, limit, and trending status
         cache_key = f"{query}_{limit}_{is_trending}"
         curr_time = time.time()
 
@@ -53,27 +51,38 @@ class YouTubeClient:
                 return results
 
         results = []
+        # Soft Query Refinement
+        refined_query = query
+        music_keywords = ["song", "music", "audio", "video", "reels", "hits", "lyrics"]
+        if not any(k in query.lower() for k in music_keywords) and not query.startswith(("http", "www")):
+            refined_query = f"{query} song"
+            
         opts = self.ydl_opts_base.copy()
+        opts['extract_flat'] = True # FAST is priority for Home/Search results
         
         if is_trending:
-            # Only results from the last 30 days
             thirty_days_ago = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y%m%d')
             opts['daterange'] = yt_dlp.utils.DateRange(start=thirty_days_ago)
 
         try:
-            print(f"DEBUG: Fetching NEW results for '{query}'...")
+            print(f"DEBUG: Fetching FAST results for '{refined_query}'...")
             with yt_dlp.YoutubeDL(opts) as ydl:
-                info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
+                # Ask for more results than needed to compensate for filtering
+                info = ydl.extract_info(f"ytsearch{limit + 5}:{refined_query}", download=False)
                 
                 if info and 'entries' in info:
                     for entry in info['entries']:
                         if not entry: continue
                         
-                        is_artist = False
-                        if entry.get('_type') == 'url' and 'channel' in entry.get('url', ''):
-                            is_artist = True
-                        elif entry.get('ie_key') == 'YoutubeChannel':
-                             is_artist = True
+                        title = entry.get('title', '').lower()
+                        duration = entry.get('duration', 0)
+                        
+                        # Soft Guard 1: Basic Duration check (discard < 20s or > 30m)
+                        if duration > 0 and (duration < 20 or duration > 1800): continue
+                        
+                        # Soft Guard 2: Exclude obvious non-music keywords (if any)
+                        exclude = ["full movie", "news", "interview", "documentary", "tutorial"]
+                        if any(x in title for x in exclude): continue
 
                         results.append({
                             'id': entry.get('id'),
@@ -81,14 +90,13 @@ class YouTubeClient:
                             'url': entry.get('url') if entry.get('url') else f"https://www.youtube.com/watch?v={entry.get('id')}",
                             'duration': entry.get('duration'),
                             'thumbnail': entry.get('thumbnail') or f"https://img.youtube.com/vi/{entry.get('id')}/mqdefault.jpg",
-                            'is_artist': is_artist,
+                            'is_artist': False,
                             'uploader': entry.get('uploader')
                         })
+                        if len(results) >= limit: break
             
-            # Store in cache
             if results:
                 self._cache[cache_key] = (results, curr_time)
-                # Cleanup cache if it grows too large
                 if len(self._cache) > 100:
                     sorted_keys = sorted(self._cache.keys(), key=lambda k: self._cache[k][1])
                     for k in sorted_keys[:20]: del self._cache[k]
@@ -96,7 +104,7 @@ class YouTubeClient:
         except Exception as e:
             print(f"Error searching: {e}")
             
-        print(f"DEBUG: Returning {len(results)} results")
+        print(f"DEBUG: Returning {len(results)} search results.")
         return results
 
     def get_stream_url(self, video_url):

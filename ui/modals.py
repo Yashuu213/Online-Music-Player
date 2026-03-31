@@ -163,3 +163,35 @@ class ModernSelectionDialog(QDialog):
 
     def get_selection(self):
         return self.combo.currentText()
+
+class ModernConfirmDialog(QDialog):
+    """Sleek, Red-Themed Confirmation Dialog."""
+    def __init__(self, title, message, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(400, 200)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.init_ui(title, message)
+        
+    def init_ui(self, title_text, msg_text):
+        from PyQt6.QtWidgets import QFrame
+        layout = QVBoxLayout(self); layout.setContentsMargins(0, 0, 0, 0)
+        container = QFrame(); container.setObjectName("ModalContainer")
+        container.setStyleSheet("""
+            QFrame#ModalContainer {
+                background: #0F1229;
+                border: 2px solid #EF4444; 
+                border-radius: 20px;
+            }
+        """)
+        c_layout = QVBoxLayout(container); c_layout.setContentsMargins(30, 25, 30, 25); c_layout.setSpacing(15)
+        
+        title_l = QLabel(title_text); title_l.setStyleSheet("font-size: 20px; font-weight: 800; color: #F87171;"); c_layout.addWidget(title_l)
+        desc_l = QLabel(msg_text); desc_l.setStyleSheet("color: #FFFFFF; font-weight: 500; font-size: 14px;"); desc_l.setWordWrap(True); c_layout.addWidget(desc_l)
+        
+        btn_layout = QHBoxLayout(); btn_layout.setSpacing(15)
+        cancel_btn = QPushButton("Cancel"); cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor); cancel_btn.setFixedHeight(40); cancel_btn.setStyleSheet("color: #94A3B8; font-weight: 800; background: transparent;"); cancel_btn.clicked.connect(self.reject)
+        confirm_btn = QPushButton("Delete 🗑️"); confirm_btn.setCursor(Qt.CursorShape.PointingHandCursor); confirm_btn.setFixedHeight(40); confirm_btn.setFixedWidth(120); confirm_btn.setStyleSheet("QPushButton { background: #EF4444; color: #FFF; border-radius: 12px; font-weight: 800; } QPushButton:hover { background: #B91C1C; }"); confirm_btn.clicked.connect(self.accept)
+        
+        btn_layout.addStretch(); btn_layout.addWidget(cancel_btn); btn_layout.addWidget(confirm_btn)
+        c_layout.addLayout(btn_layout); layout.addWidget(container)
