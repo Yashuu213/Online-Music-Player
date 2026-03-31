@@ -1,6 +1,15 @@
 {
     "history": [
         {
+            "duration": 227.0,
+            "id": "La-rvyhu-Vo",
+            "is_artist": false,
+            "thumbnail": "https://img.youtube.com/vi/La-rvyhu-Vo/mqdefault.jpg",
+            "title": "New Song | Teri Nazar Ne | Salman Khan | Nayanthara | New Hindi Song | New Song 2026",
+            "uploader": "Gaurav Mali",
+            "url": "https://www.youtube.com/watch?v=La-rvyhu-Vo"
+        },
+        {
             "duration": 2878.0,
             "id": "yszisrGQsmY",
             "is_artist": false,
@@ -408,13 +417,6 @@
             "thumbnail": "https://img.youtube.com/vi/zg38dSxhzzc/mqdefault.jpg",
             "title": "AMPLIFIER X BROWN RANG MASHUP | DJ JITS | HONEY SINGH | IMRAN KHAN | MASHUP OF 2024",
             "url": "https://www.youtube.com/watch?v=zg38dSxhzzc"
-        },
-        {
-            "duration": 303.0,
-            "id": "kfKP4o-bXzM",
-            "thumbnail": "https://img.youtube.com/vi/kfKP4o-bXzM/mqdefault.jpg",
-            "title": "Kaavish - Tere Pyaar Main",
-            "url": "https://www.youtube.com/watch?v=kfKP4o-bXzM"
         }
     ],
     "playlists": {
@@ -444,11 +446,11 @@
             "Hindi"
         ],
         "last_searches": [
-            "tum jo aaye jindgi me ",
-            "mari mata na pagl",
-            "tum ",
             "tum jo aaye jin",
-            "tum jo aaye "
+            "tum jo aaye ",
+            "tum ",
+            "tum jo aaye jindgi me ",
+            "mari mata na pagl"
         ]
     }
 }

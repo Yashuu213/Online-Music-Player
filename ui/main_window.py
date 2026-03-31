@@ -18,7 +18,7 @@ from collections import Counter
 from ui.styles import PREMIUM_PIKACHU_THEME
 from ui.now_playing import NowPlayingWidget
 from ui.custom_widgets import SongItemWidget, SongCardWidget, ArtistCardWidget, PlaylistCardWidget
-from ui.icons import get_icon, SVG_SEARCH, SVG_HOME, SVG_LIBRARY, SVG_CHEVRON_LEFT, SVG_TRENDING
+from ui.icons import get_icon, SVG_SEARCH, SVG_HOME, SVG_LIBRARY, SVG_CHEVRON_LEFT, SVG_TRENDING, SVG_PLAY, SVG_PAUSE, SVG_NEXT, SVG_PREV
 from ui.modals import ModernInputDialog, ModernSelectionDialog, ModernConfirmDialog
 from core.youtube_client import YouTubeClient
 from core.audio_player import AudioPlayer
@@ -93,7 +93,24 @@ class MainWindow(QMainWindow):
         self.trending_btn = self.create_sidebar_item("TRENDING", SVG_TRENDING, 2); sidebar_layout.addWidget(self.trending_btn)
         self.library_btn = self.create_sidebar_item("LIBRARY", SVG_LIBRARY, 3); sidebar_layout.addWidget(self.library_btn)
         sidebar_layout.addStretch()
-        self.mini_player = QFrame(); self.mini_player.setObjectName("GlassPanel"); self.mini_player.setFixedHeight(120); m_l = QVBoxLayout(self.mini_player); self.mini_thumb = QLabel(); self.mini_thumb.setFixedSize(40, 40); self.mini_thumb.setStyleSheet("background: #000; border-radius: 4px;"); m_l.addWidget(self.mini_thumb, alignment=Qt.AlignmentFlag.AlignCenter); self.mini_title = QLabel("Ready to play"); self.mini_title.setObjectName("MutedText"); self.mini_title.setAlignment(Qt.AlignmentFlag.AlignCenter); m_l.addWidget(self.mini_title); e_m = QPushButton("Expand Player"); e_m.setObjectName("SecondaryAction"); e_m.clicked.connect(self.switch_to_now_playing); m_l.addWidget(e_m); sidebar_layout.addWidget(self.mini_player); main_layout.addWidget(self.sidebar)
+        self.mini_player = QFrame(); self.mini_player.setObjectName("GlassPanel"); self.mini_player.setFixedHeight(210); m_l = QVBoxLayout(self.mini_player); 
+        m_l.setContentsMargins(12, 15, 12, 12); m_l.setSpacing(8)
+        
+        self.mini_thumb = QLabel(); self.mini_thumb.setFixedSize(50, 50); self.mini_thumb.setStyleSheet("background: #000; border-radius: 10px; border: 1px solid rgba(255,215,0,0.3);"); m_l.addWidget(self.mini_thumb, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.mini_title = QLabel("Ready to play"); self.mini_title.setObjectName("MutedText"); self.mini_title.setAlignment(Qt.AlignmentFlag.AlignCenter); self.mini_title.setWordWrap(True); self.mini_title.setStyleSheet("font-size: 13px; font-weight: 600; color: #FFF; margin: 2px 0;"); self.mini_title.setMaximumHeight(45)
+        m_l.addWidget(self.mini_title)
+        
+        # Mini Controls with breathing room
+        c_l = QHBoxLayout(); c_l.setSpacing(12); c_l.setAlignment(Qt.AlignmentFlag.AlignCenter); c_l.setContentsMargins(0, 5, 0, 5)
+        self.mini_prev = QPushButton(); self.mini_prev.setIcon(get_icon(SVG_PREV, "#94A3B8")); self.mini_prev.setFixedSize(32,32); self.mini_prev.setStyleSheet("QPushButton { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; } QPushButton:hover { background: rgba(255,255,255,0.1); }"); self.mini_prev.clicked.connect(self.play_previous_song); c_l.addWidget(self.mini_prev)
+        self.mini_play = QPushButton(); self.mini_play.setIcon(get_icon(SVG_PLAY, "#FFD700")); self.mini_play.setIconSize(QSize(22,22)); self.mini_play.setFixedSize(40,40); self.mini_play.setStyleSheet("QPushButton { background: rgba(255,215,0,0.15); border: 2px solid #FFD700; border-radius: 20px; } QPushButton:hover { background: rgba(255,215,0,0.25); }"); self.mini_play.clicked.connect(self.play_pause); c_l.addWidget(self.mini_play)
+        self.mini_next = QPushButton(); self.mini_next.setIcon(get_icon(SVG_NEXT, "#94A3B8")); self.mini_next.setFixedSize(32,32); self.mini_next.setStyleSheet("QPushButton { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; } QPushButton:hover { background: rgba(255,255,255,0.1); }"); self.mini_next.clicked.connect(self.play_next_in_queue); c_l.addWidget(self.mini_next)
+        m_l.addLayout(c_l)
+        
+        m_l.addSpacing(5)
+        e_m = QPushButton("Expand Player"); e_m.setObjectName("SecondaryAction"); e_m.setFixedHeight(35); e_m.clicked.connect(self.switch_to_now_playing); m_l.addWidget(e_m); 
+        sidebar_layout.addWidget(self.mini_player); main_layout.addWidget(self.sidebar)
         self.content_stack = QStackedWidget()
         self.home_page = QWidget(); self.init_home_page(); self.content_stack.addWidget(self.home_page)
         self.search_page = QWidget(); self.init_search_page(); self.content_stack.addWidget(self.search_page)
@@ -342,6 +359,7 @@ class MainWindow(QMainWindow):
         if self.current_video and self.current_video['id'] == video_id:
             if self.audio_player.play_url(url, crossfade=True): 
                 self.now_playing_page.update_play_btn(True)
+                self.mini_play.setIcon(get_icon(SVG_PAUSE, "#FFD700"))
                 self.timer.start()
     def update_progress(self):
         ms = self.audio_player.get_time(); self.now_playing_page.update_progress(ms)
@@ -353,7 +371,15 @@ class MainWindow(QMainWindow):
         elif self.current_video: self.fetch_recommendations(self.current_video) 
     def play_previous_song(self): [ (self.history_session.pop(), self.play_video(self.history_session.pop())) for _ in [0] if len(self.history_session) >= 2]
     def skip_time(self, ms_delta): curr = self.audio_player.get_time(); self.set_position(curr + ms_delta)
-    def play_pause(self): (self.audio_player.pause(), self.now_playing_page.update_play_btn(False)) if self.audio_player.is_playing() else (self.audio_player.pause(), self.now_playing_page.update_play_btn(True))
+    def play_pause(self):
+        if self.audio_player.is_playing():
+            self.audio_player.pause()
+            self.now_playing_page.update_play_btn(False)
+            self.mini_play.setIcon(get_icon(SVG_PLAY, "#FFD700"))
+        else:
+            self.audio_player.pause() # This actually resumes in AudioPlayer if paused
+            self.now_playing_page.update_play_btn(True)
+            self.mini_play.setIcon(get_icon(SVG_PAUSE, "#FFD700"))
     def set_position(self, p): self.audio_player.set_time(p)
     def load_history(self):
         if not hasattr(self, 'his_layout'): return
