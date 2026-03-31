@@ -47,15 +47,17 @@ SVG_PREV = """
 
 SVG_BACKWARD_10 = """
 <svg viewBox="0 0 24 24" fill="white">
-  <path d="M11 18V6l-8.5 6L11 18zm.5-6l8.5 6V6l-8.5 6zM7 13h2v-2H7v2z"/>
-  <text x="12" y="20" font-size="8" fill="white" font-weight="bold">10</text>
+  <path d="M12 5V19L3 12L12 5ZM13 5V19L22 12L13 5Z" opacity="0.5"/>
+  <path d="M10 10H9V14H10V10Z M13 10H12V14H13V10Z" fill="white"/>
+  <path d="M8 11V14H7V11H6V10H8V11Z" fill="white"/>
 </svg>
 """
 
 SVG_FORWARD_10 = """
 <svg viewBox="0 0 24 24" fill="white">
-  <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
-  <text x="4" y="20" font-size="8" fill="white" font-weight="bold">10</text>
+  <path d="M12 5V19L21 12L12 5ZM11 5V19L2 12L11 5Z" opacity="0.5"/>
+  <path d="M14 10H13V14H14V10Z M17 10H16V14H17V10Z" fill="white"/>
+  <path d="M12 11V14H11V11H10V10H12V11Z" fill="white"/>
 </svg>
 """
 
@@ -85,6 +87,18 @@ SVG_TRENDING = """
 SVG_DELETE = """
 <svg viewBox="0 0 24 24" fill="white">
   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+</svg>
+"""
+
+SVG_SHUFFLE = """
+<svg viewBox="0 0 24 24" fill="white">
+  <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.45 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+</svg>
+"""
+
+SVG_REPEAT = """
+<svg viewBox="0 0 24 24" fill="white">
+  <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
 </svg>
 """
 

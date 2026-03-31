@@ -9,9 +9,10 @@ class StorageManager:
             "history": [],
             "playlists": {},
             "preferences": {
-                "languages": ["Hindi"], # Default
+                "languages": ["Hindi"], 
                 "last_searches": []
-            }
+            },
+            "home_cache": {} # NEW: Persistent Home Dashboard Cache
         }
         self.load_data()
 
@@ -83,3 +84,11 @@ class StorageManager:
         searches.insert(0, term)
         self.data["preferences"]["last_searches"] = searches[:5] # Keep last 5
         self.save_data()
+
+    def save_home_cache(self, context, results):
+        if not self.data.get("home_cache"): self.data["home_cache"] = {}
+        self.data["home_cache"][context] = results
+        self.save_data()
+
+    def get_home_cache(self, context):
+        return self.data.get("home_cache", {}).get(context, [])

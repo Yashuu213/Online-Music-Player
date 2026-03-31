@@ -144,13 +144,30 @@ class MainWindow(QMainWindow):
         
         self.mini_thumb = QLabel(); self.mini_thumb.setFixedSize(42, 42); self.mini_thumb.setStyleSheet("border-radius: 6px; background: #1A1A1A;"); self.mini_content_l.addWidget(self.mini_thumb)
         
-        text_v = QVBoxLayout(); text_v.setSpacing(2)
-        self.mini_title = QLabel("Ready to Play"); self.mini_title.setStyleSheet("font-weight: 700; font-size: 13px; color: #FFF;"); self.mini_artist = QLabel("Pikachu Music"); self.mini_artist.setStyleSheet("color: #94A3B8; font-size: 11px;")
-        text_v.addWidget(self.mini_title); text_v.addWidget(self.mini_artist); self.mini_content_l.addLayout(text_v, stretch=1)
+        text_v = QVBoxLayout(); text_v.setSpacing(1)
+        self.mini_title = QLabel("Ready to Play")
+        self.mini_title.setStyleSheet("font-weight: 800; font-size: 15px; color: #FFF;") # Bolder, larger for clarity
+        self.mini_title.setWordWrap(False)
+        self.mini_artist = QLabel("Pikachu Music")
+        self.mini_artist.setStyleSheet("color: #94A3B8; font-size: 12px;") # Slightly larger artist
+        text_v.addWidget(self.mini_title); text_v.addWidget(self.mini_artist); self.mini_content_l.addLayout(text_v, stretch=2) # More space for title
         
         self.mini_prev = QPushButton(); self.mini_prev.setFixedSize(30, 30); self.mini_prev.setIcon(get_icon(SVG_PREV, "#94A3B8")); self.mini_prev.clicked.connect(self.play_previous_song)
+        
+        self.mini_skip_bwd = QPushButton(); from ui.icons import SVG_BACKWARD_10; self.mini_skip_bwd.setFixedSize(30, 30); self.mini_skip_bwd.setIcon(get_icon(SVG_BACKWARD_10, "#94A3B8")); self.mini_skip_bwd.clicked.connect(lambda: self.skip_time(-10000))
+        
         self.mini_play = QPushButton(); self.mini_play.setFixedSize(40, 40); self.mini_play.setIcon(get_icon(SVG_PLAY, "#FFD700")); self.mini_play.clicked.connect(self.play_pause)
+        
+        self.mini_skip_fwd = QPushButton(); from ui.icons import SVG_FORWARD_10; self.mini_skip_fwd.setFixedSize(30, 30); self.mini_skip_fwd.setIcon(get_icon(SVG_FORWARD_10, "#94A3B8")); self.mini_skip_fwd.clicked.connect(lambda: self.skip_time(10000))
+        
         self.mini_next = QPushButton(); self.mini_next.setFixedSize(30, 30); self.mini_next.setIcon(get_icon(SVG_NEXT, "#94A3B8")); self.mini_next.clicked.connect(self.play_next_in_queue)
+        
+        # Add to content layout
+        self.mini_content_l.addWidget(self.mini_prev)
+        self.mini_content_l.addWidget(self.mini_skip_bwd)
+        self.mini_content_l.addWidget(self.mini_play)
+        self.mini_content_l.addWidget(self.mini_skip_fwd)
+        self.mini_content_l.addWidget(self.mini_next)
         
         # Micro Progress Bar (Spotify-style thin line at the very bottom)
         self.mini_progress_bg = QFrame(); self.mini_progress_bg.setFixedHeight(2); self.mini_progress_bg.setStyleSheet("background: rgba(255,255,255,0.05); border: none;")
@@ -160,7 +177,7 @@ class MainWindow(QMainWindow):
         self.mini_layout.addWidget(self.mini_progress_bg)
         
         # Styles for small buttons
-        for btn in [self.mini_prev, self.mini_next]:
+        for btn in [self.mini_prev, self.mini_next, self.mini_skip_bwd, self.mini_skip_fwd]:
             btn.setStyleSheet("QPushButton { background: transparent; border: none; } QPushButton:hover { background: rgba(255,255,255,0.05); border-radius: 15px; }")
         
         # Add to Sidebar by default (Desktop)
@@ -171,7 +188,7 @@ class MainWindow(QMainWindow):
         self.top_layout.addWidget(self.content_stack, stretch=1)
         
         # Bottom Navigation Bar (Mobile Viewport)
-        self.bottom_nav = QFrame(); self.bottom_nav.setObjectName("GlassPanel"); self.bottom_nav.setFixedHeight(75); self.bottom_nav.hide()
+        self.bottom_nav = QFrame(); self.bottom_nav.setObjectName("GlassPanel"); self.bottom_nav.setFixedHeight(85); self.bottom_nav.hide()
         bn_l = QVBoxLayout(self.bottom_nav); bn_l.setContentsMargins(10, 0, 10, 0); bn_l.setSpacing(0)
         
         # Sliding Indicator for Bottom Nav
@@ -217,6 +234,18 @@ class MainWindow(QMainWindow):
         return btn
 
     def switch_page(self, i): 
+        # State: 4 is the Now Playing Page Index (Added in setup_ui)
+        is_full_player = (i == 4)
+        
+        if is_full_player:
+            self.bottom_nav.hide()
+            self.mini_player.hide()
+            self.sidebar_scroll.hide()
+        else:
+            if self.last_sidebar_state == "mobile": self.bottom_nav.show()
+            self.mini_player.show()
+            if self.last_sidebar_state != "mobile": self.sidebar_scroll.show()
+            
         if i == 0: self.refresh_home_dashboard()
         if i == 1: self.refresh_search_recommendations()
         if i == 2: self.refresh_trending_page()
@@ -427,30 +456,27 @@ class MainWindow(QMainWindow):
         user_langs = self.storage.get_preferences().get("languages", ["Hindi"])
         lang_str = " ".join(user_langs[:2])
         
-        # Phase 1: Top 10 Categories (Priority First)
+        # Phase 1: Top 10 Categories (Turbo-Hero Priority)
         for i in range(min(10, len(pool))):
-            t, q = pool[i]; self.add_dynamic_row(f"{t}", f"{lang_str} {q}", f"home_pool_{i}_{t.lower().replace(' ', '_')}", self.home_rows_layout, is_trending=(i<4), limit=30, delay=i*600)
+            t, q = pool[i]; self.add_dynamic_row(f"{t}", f"{lang_str} {q}", f"home_pool_{i}_{t.lower().replace(' ', '_')}", self.home_rows_layout, is_trending=(i<4), limit=30, delay=(i*150 if i>=4 else 0))
 
         # 🎤 Artists Section (Pinned after 10th Row)
         # ... (Artist code stays same)
-
-        # 🎤 Artists Section (Pinned after 10th Row)
+        # ... (Artist code stays same)
         art_h = QLabel("Explore Your Favorite Artists 🎤"); art_h.setObjectName("SectionHeader"); self.home_rows_layout.addWidget(art_h)
         a_s = QScrollArea(); a_s.setFixedHeight(210); a_s.setWidgetResizable(True); a_s.setStyleSheet("background: transparent; border: none;")
         a_c = QWidget(); a_l = QHBoxLayout(a_c); a_l.setContentsMargins(0,0,0,0); a_l.setSpacing(15)
+        # Dynamic Artist Pool
         ads = [("Arijit Singh", "https://i.scdn.co/image/ab6761610000e5eb12810de09aef82b3c2069670"), ("Atif Aslam", "https://i.scdn.co/image/ab6761610000e5eb748805f42f53d71221fcc232"), ("Shreya Ghoshal", "https://i.scdn.co/image/ab6761610000e5eb7ed821e25e9acc8a2fb3a4d9"), ("Alka Yagnik", "https://i.scdn.co/image/ab6761610000e5eb46059c393bcaf146e4544760"), ("Honey Singh", "https://i.scdn.co/image/ab6761610000e5ebcc7517973d47ad8fcfcb7fb4"), ("Jubin Nautiyal", "https://i.scdn.co/image/ab6761610000e5eb4270d49489ef0cbcf3ca5932")]
         random.shuffle(ads)
         for n, u in ads[:6]:
             w = ArtistCardWidget(n); a_l.addWidget(w)
-            lo = ThumbnailLoader(w, u, f"Artist_{n}")
-            lo.thumbnail_loaded.connect(self.on_artist_image_loaded)
-            lo.finished.connect(lambda t_obj=lo: self.cleanup_thread(t_obj))
-            self.active_threads.append(lo); lo.start()
+            lo = ThumbnailLoader(w, u, f"Artist_{n}"); lo.thumbnail_loaded.connect(self.on_artist_image_loaded); lo.finished.connect(lambda t_obj=lo: self.cleanup_thread(t_obj)); self.active_threads.append(lo); lo.start()
         a_l.addStretch(); a_s.setWidget(a_c); self.home_rows_layout.addWidget(a_s)
         
-        # Phase 2: Remaining Categories (Ensuring a total of ~32)
+        # Phase 2: Remaining Categories (Ensuring a total of ~32) with Turbo-Stagger
         for i in range(10, len(pool)):
-            t, q = pool[i]; self.add_dynamic_row(f"{t}", f"{lang_str} {q}", f"home_pool_{i}_{t.lower().replace(' ', '_')}", self.home_rows_layout, is_trending=False, limit=25, delay=i*600)
+            t, q = pool[i]; self.add_dynamic_row(f"{t}", f"{lang_str} {q}", f"home_pool_{i}_{t.lower().replace(' ', '_')}", self.home_rows_layout, is_trending=False, limit=25, delay=i*150)
         
         his_h = QLabel("Recently Played"); his_h.setObjectName("SectionHeader"); self.home_rows_layout.addWidget(his_h); self.his_scroll = self.create_row_scroll(responsive=False); self.his_layout = self.his_scroll.widget().layout(); self.home_rows_layout.addWidget(self.his_scroll); self.load_history(); self.home_rows_layout.addStretch()
 
@@ -468,8 +494,13 @@ class MainWindow(QMainWindow):
             container = s.widget()
             l = container.layout()
         
-        # Add Skeleton 'Loading...' Label
-        load_lbl = QLabel("  Fetching songs from the deep..."); load_lbl.setStyleSheet("color: rgba(255, 215, 0, 0.4); font-style: italic;"); l.addWidget(load_lbl)
+        # Add Skeleton 'Loading...' (unless already in cache)
+        cached = self.storage.get_home_cache(context)
+        if cached:
+            # INSTANT LOAD FROM CACHE ✨🏙️🛡️
+            self.on_search_results(cached, context)
+        else:
+            load_lbl = QLabel("  Fetching fresh songs from the deep..."); load_lbl.setStyleSheet("color: rgba(255, 215, 0, 0.4); font-style: italic;"); l.addWidget(load_lbl)
         
         # Staggered Start with QTimer
         def start_row_thread():
@@ -608,6 +639,9 @@ class MainWindow(QMainWindow):
                             self.active_threads.append(lo)
                             lo.start()
                     
+                    if context.startswith("home_pool_") or context.startswith("search_rec_"):
+                         self.storage.save_home_cache(context, results)
+                         
                     if isinstance(w, QScrollArea) and not isinstance(l, FlowLayout):
                         l.addStretch() # Restore stretch for horizontal rows
                     
@@ -631,7 +665,11 @@ class MainWindow(QMainWindow):
     def play_video(self, v):
         if not v: return
         self.current_video = v; self.storage.add_to_history(v); self.history_session.append(v); self.played_video_ids.add(v['id'])
-        self.mini_title.setText(v['title']); self.mini_artist.setText(v.get('uploader', 'Unknown Artist'))
+        # Metadata Cleaning (Remove generic 'YouTube Audio/Music')
+        artist = str(v.get('uploader', 'Unknown Artist'))
+        if "youtube" in artist.lower(): artist = "Pikachu Music"
+        
+        self.mini_title.setText(v['title']); self.mini_artist.setText(artist)
         pix = self.image_cache.get(v['id'])
         if pix: (self.mini_thumb.setPixmap(pix.scaled(40,40)), self.update_ambient_glow(pix))
         self.load_history(); self.fetch_recommendations(v); self.now_playing_page.update_info(v, pix)
