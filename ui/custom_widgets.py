@@ -82,6 +82,16 @@ class SongCardWidget(QFrame):
         super().__init__()
         self.video_data = video_data; self.setFixedSize(160, 220); self.setObjectName("GlassPanel"); self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.init_ui()
+    def set_compact(self, compact):
+        s = QSize(110, 175) if compact else QSize(160, 220)
+        t = QSize(100, 100) if compact else QSize(140, 140)
+        self.setFixedSize(s); self.thumb_label.setFixedSize(t)
+        self.title_label.setStyleSheet(f"font-weight: 700; font-size: {'11px' if compact else '13px'}; color: #FFF;")
+        self.muted_label.setVisible(not compact)
+        try:
+            if self.thumb_label.pixmap():
+                self.thumb_label.setPixmap(self.thumb_label.pixmap().scaled(t, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+        except: pass
     def init_ui(self):
         layout = QVBoxLayout(self); layout.setContentsMargins(10, 10, 10, 12); layout.setSpacing(10)
         self.thumb_label = QLabel(); self.thumb_label.setFixedSize(140, 140); self.thumb_label.setStyleSheet("background: #111; border-radius: 12px;"); self.thumb_label.setAlignment(Qt.AlignmentFlag.AlignCenter); layout.addWidget(self.thumb_label)
@@ -98,6 +108,12 @@ class ArtistCardWidget(QFrame):
     clicked = pyqtSignal(str)
     def __init__(self, name, image_url=None):
         super().__init__(); self.name = name; self.image_url = image_url; self.setFixedSize(140, 180); self.setObjectName("GlassPanel"); self.setStyleSheet("#GlassPanel { background: transparent; border: none; } #GlassPanel:hover { background: rgba(255, 255, 255, 0.05); border-radius: 15px; }"); self.setCursor(Qt.CursorShape.PointingHandCursor); self.init_ui()
+    def set_compact(self, compact):
+        s = QSize(100, 140) if compact else QSize(140, 180)
+        t = QSize(80, 80) if compact else QSize(110, 110)
+        self.setFixedSize(s); self.img_label.setFixedSize(t)
+        self.name_label.setStyleSheet(f"font-weight: 600; font-size: {'11px' if compact else '13px'}; color: #FFF;")
+        self.muted_label.setVisible(not compact)
     def init_ui(self):
         layout = QVBoxLayout(self); layout.setContentsMargins(10, 10, 10, 10); layout.setSpacing(12); layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.img_label = QLabel(); self.img_label.setFixedSize(110, 110); self.img_label.setStyleSheet("background: #1A1A1A; border-radius: 55px; border: 2px solid rgba(255, 215, 0, 0.3);"); self.img_label.setAlignment(Qt.AlignmentFlag.AlignCenter); self.img_label.setText(self.name[0]); self.img_label.setStyleSheet(self.img_label.styleSheet() + "font-size: 40px; font-weight: bold; color: #FFF;"); layout.addWidget(self.img_label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -119,6 +135,9 @@ class PlaylistCardWidget(QFrame):
         self.name = name; self.count = count
         self.setFixedSize(180, 220); self.setObjectName("GlassPanel"); self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.init_ui()
+    def set_compact(self, compact):
+        s = QSize(140, 180) if compact else QSize(180, 220)
+        self.setFixedSize(s)
         
     def init_ui(self):
         self.layout = QVBoxLayout(self)

@@ -67,21 +67,23 @@ class YouTubeClient:
         try:
             print(f"DEBUG: Fetching FAST results for '{refined_query}'...")
             with yt_dlp.YoutubeDL(opts) as ydl:
-                # Ask for more results than needed to compensate for filtering
-                info = ydl.extract_info(f"ytsearch{limit + 5}:{refined_query}", download=False)
+                # Ask for significantly more results to ensure density (multiplier)
+                search_n = limit + 20 if limit > 15 else limit + 5
+                info = ydl.extract_info(f"ytsearch{search_n}:{refined_query}", download=False)
                 
                 if info and 'entries' in info:
                     for entry in info['entries']:
                         if not entry: continue
                         
                         title = entry.get('title', '').lower()
-                        duration = entry.get('duration', 0)
+                        # Soft Guard 1: Basic Duration check (Relaxed for Home/Discovery)
+                        duration = entry.get('duration')
+                        is_home = limit > 15
+                        if isinstance(duration, (int, float)) and duration > 0 and not is_home:
+                            if duration < 20 or duration > 1800: continue
                         
-                        # Soft Guard 1: Basic Duration check (discard < 20s or > 30m)
-                        if duration > 0 and (duration < 20 or duration > 1800): continue
-                        
-                        # Soft Guard 2: Exclude obvious non-music keywords (if any)
-                        exclude = ["full movie", "news", "interview", "documentary", "tutorial"]
+                        # Soft Guard 2: Exclude obvious non-music keywords
+                        exclude = ["full movie", "news", "interview", "documentary", "tutorial", "unboxing"]
                         if any(x in title for x in exclude): continue
 
                         results.append({

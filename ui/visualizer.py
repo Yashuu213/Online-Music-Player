@@ -18,6 +18,10 @@ class RotatingAlbumArt(QWidget):
         
         self.setFixedSize(300, 300)
 
+    def set_size(self, size):
+        self.setFixedSize(size, size)
+        self.update()
+
     def set_pixmap(self, pixmap):
         self.pixmap = pixmap
         self.update()
@@ -117,6 +121,10 @@ class BarVisualizer(QWidget):
         self.timer.setInterval(50)
         
         self.setFixedHeight(60) 
+
+    def set_size(self, size):
+        self.setFixedWidth(size)
+        self.update()
 
     def set_playing(self, playing):
         self.is_playing = playing

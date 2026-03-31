@@ -56,7 +56,7 @@ QScrollBar::handle:horizontal:hover {
     background: transparent;
     color: #94A3B8;
     border-radius: 12px;
-    padding: 12px 20px;
+    padding: 12px 14px;
     font-size: 14px;
     font-weight: 600;
     text-align: left;
@@ -66,10 +66,15 @@ QScrollBar::handle:horizontal:hover {
     background: rgba(255, 215, 0, 0.05);
     color: #FFD700;
 }
-#SidebarItem[active="true"] {
+#SidebarItem:pressed {
     background: rgba(255, 215, 0, 0.1);
+    transform: translateY(1px);
+}
+#SidebarItem[active="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 215, 0, 0.1), stop:1 transparent);
     color: #FFD700;
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-left: 3px solid #FFD700;
+    padding-left: 17px;
 }
 
 /* --- Dashboard Section Headers --- */
@@ -108,15 +113,17 @@ QLineEdit#SearchBar:focus {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* --- Glass Panels (Cards) --- */
+/* --- Glass Panels (Premium) --- */
 #GlassPanel {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
+    background: qradialgradient(cx:0.5, cy:0, radius:1.2, fx:0.5, fy:0, 
+        stop:0 rgba(255, 255, 255, 0.08), stop:1 rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
 }
 #GlassPanel:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: qradialgradient(cx:0.5, cy:0, radius:1.2, fx:0.5, fy:0, 
+        stop:0 rgba(255, 215, 0, 0.05), stop:1 rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 215, 0, 0.1);
 }
 
 /* --- Primary Buttons --- */

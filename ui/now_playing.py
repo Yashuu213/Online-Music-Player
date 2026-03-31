@@ -61,18 +61,21 @@ class NowPlayingWidget(QWidget):
         
         main_layout.addLayout(top_bar)
         
-        # Middle Section (Stacked Art/Lyrics + Queue)
-        content_layout = QHBoxLayout(); content_layout.setSpacing(60)
+        # Middle Section Container (Adaptive)
+        self.content_container = QWidget()
+        self.content_layout = QHBoxLayout(self.content_container)
+        self.content_layout.setContentsMargins(0, 0, 0, 0); self.content_layout.setSpacing(60)
         
         self.art_lyrics_stack = QStackedWidget()
         
         # Slide 1: Art View
-        art_container_w = QWidget(); art_container = QVBoxLayout(art_container_w)
+        self.art_container_w = QWidget(); self.art_container_l = QVBoxLayout(self.art_container_w)
+        self.art_container_l.setContentsMargins(0, 0, 0, 0)
         self.visualizer = RotatingAlbumArt()
-        art_container.addWidget(self.visualizer, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.art_container_l.addWidget(self.visualizer, alignment=Qt.AlignmentFlag.AlignCenter)
         self.bar_vis = BarVisualizer(); self.bar_vis.setFixedWidth(300)
-        art_container.addWidget(self.bar_vis, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.art_lyrics_stack.addWidget(art_container_w)
+        self.art_container_l.addWidget(self.bar_vis, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.art_lyrics_stack.addWidget(self.art_container_w)
         
         # Slide 2: Lyrics View
         lyrics_container_w = QWidget(); lyrics_container = QVBoxLayout(lyrics_container_w)
@@ -85,12 +88,14 @@ class NowPlayingWidget(QWidget):
         lyrics_container.addWidget(self.lyrics_scroll)
         self.art_lyrics_stack.addWidget(lyrics_container_w)
         
-        content_layout.addWidget(self.art_lyrics_stack)
+        self.content_layout.addWidget(self.art_lyrics_stack)
         
-        # Right: Info & Queue
-        info_queue_layout = QVBoxLayout(); info_queue_layout.setSpacing(20)
+        # Right/Bottom Section: Info & Queue
+        self.info_queue_widget = QWidget()
+        self.info_queue_layout = QVBoxLayout(self.info_queue_widget); self.info_queue_layout.setSpacing(15)
+        self.info_queue_layout.setContentsMargins(0, 0, 0, 0)
         
-        title_hl = QHBoxLayout()
+        title_hl = QHBoxLayout(); title_hl.setContentsMargins(0, 0, 0, 0)
         self.title_label = QLabel("No Song Playing"); self.title_label.setStyleSheet("font-size: 32px; font-weight: 800; color: #FFD700;"); self.title_label.setWordWrap(True)
         title_hl.addWidget(self.title_label, stretch=1)
         
@@ -102,22 +107,24 @@ class NowPlayingWidget(QWidget):
         self.add_btn.clicked.connect(lambda: self.add_to_playlist_clicked.emit(self.current_video) if hasattr(self, 'current_video') and self.current_video else None)
         title_hl.addWidget(self.add_btn)
         
-        info_queue_layout.addLayout(title_hl)
+        self.info_queue_layout.addLayout(title_hl)
         
-        self.artist_label = QLabel("Select a track to start listening"); self.artist_label.setObjectName("MutedText"); self.artist_label.setStyleSheet("font-size: 18px; color: #94A3B8;"); info_queue_layout.addWidget(self.artist_label)
-        info_queue_layout.addSpacing(20)
-        queue_header = QLabel("UP NEXT"); queue_header.setStyleSheet("font-weight: 800; font-size: 14px; letter-spacing: 2px; color: #00E5FF;"); info_queue_layout.addWidget(queue_header)
+        self.artist_label = QLabel("Select a track to start listening"); self.artist_label.setObjectName("MutedText"); self.artist_label.setStyleSheet("font-size: 18px; color: #94A3B8;"); self.info_queue_layout.addWidget(self.artist_label)
+        
+        self.queue_header = QLabel("UP NEXT"); self.queue_header.setStyleSheet("font-weight: 800; font-size: 14px; letter-spacing: 2px; color: #00E5FF; margin-top: 10px;"); self.info_queue_layout.addWidget(self.queue_header)
         self.up_next_list = QListWidget(); self.up_next_list.setObjectName("QueueList"); self.up_next_list.setStyleSheet("QListWidget { background: transparent; } QListWidget::item { margin-bottom: 10px; }")
-        info_queue_layout.addWidget(self.up_next_list)
+        self.info_queue_layout.addWidget(self.up_next_list)
         
-        content_layout.addLayout(info_queue_layout, stretch=1)
-        main_layout.addLayout(content_layout, stretch=1)
+        self.content_layout.addWidget(self.info_queue_widget)
+        main_layout.addWidget(self.content_container, stretch=1)
         
-        # Bottom Controls
-        controls_container = QVBoxLayout(); controls_container.setSpacing(10)
+        # Bottom Controls (Always visible in fixed position)
+        self.controls_widget = QWidget(); self.controls_layout = QVBoxLayout(self.controls_widget); self.controls_layout.setSpacing(10)
+        self.controls_layout.setContentsMargins(0, 20, 0, 0)
+        
         progress_layout = QHBoxLayout(); self.current_time_label = QLabel("0:00"); self.current_time_label.setObjectName("MutedText")
         self.progress_slider = QSlider(Qt.Orientation.Horizontal); self.progress_slider.setObjectName("ProgressSlider"); self.progress_slider.setCursor(Qt.CursorShape.PointingHandCursor); self.progress_slider.sliderMoved.connect(self.seek_requested.emit)
-        self.total_time_label = QLabel("0:00"); self.total_time_label.setObjectName("MutedText"); progress_layout.addWidget(self.current_time_label); progress_layout.addWidget(self.progress_slider); progress_layout.addWidget(self.total_time_label); controls_container.addLayout(progress_layout)
+        self.total_time_label = QLabel("0:00"); self.total_time_label.setObjectName("MutedText"); progress_layout.addWidget(self.current_time_label); progress_layout.addWidget(self.progress_slider); progress_layout.addWidget(self.total_time_label); self.controls_layout.addLayout(progress_layout)
         
         btns_layout = QHBoxLayout(); btns_layout.setAlignment(Qt.AlignmentFlag.AlignCenter); btns_layout.setSpacing(25)
         sub_btn_style = "QPushButton { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; } QPushButton:hover { background: rgba(255, 255, 255, 0.1); border: 1px solid #00E5FF; }"
@@ -126,9 +133,10 @@ class NowPlayingWidget(QWidget):
         self.play_btn = QPushButton(); self.play_btn.setIcon(get_icon(SVG_PLAY, "#000")); self.play_btn.setIconSize(QSize(36, 36)); self.play_btn.setFixedSize(80, 80); self.play_btn.setObjectName("PrimaryAction"); self.play_btn.setCursor(Qt.CursorShape.PointingHandCursor); self.play_btn.clicked.connect(self.play_pause_clicked.emit); btns_layout.addWidget(self.play_btn)
         self.skip_fwd_btn = QPushButton(); self.skip_fwd_btn.setIcon(get_icon(SVG_FORWARD_10, "#FFF")); self.skip_fwd_btn.setIconSize(QSize(24, 24)); self.skip_fwd_btn.setFixedSize(50, 50); self.skip_fwd_btn.setStyleSheet(sub_btn_style); self.skip_fwd_btn.setCursor(Qt.CursorShape.PointingHandCursor); self.skip_fwd_btn.clicked.connect(self.skip_forward_clicked.emit); btns_layout.addWidget(self.skip_fwd_btn)
         self.next_btn = QPushButton(); self.next_btn.setIcon(get_icon(SVG_NEXT, "#FFF")); self.next_btn.setIconSize(QSize(24, 24)); self.next_btn.setFixedSize(50, 50); self.next_btn.setStyleSheet(sub_btn_style); self.next_btn.setCursor(Qt.CursorShape.PointingHandCursor); self.next_btn.clicked.connect(self.next_clicked.emit); btns_layout.addWidget(self.next_btn)
-        controls_container.addLayout(btns_layout); main_layout.addLayout(controls_container)
+        self.controls_layout.addLayout(btns_layout); main_layout.addWidget(self.controls_widget)
         
         layout.addWidget(self.main_container)
+        self.is_mobile = False
 
     def setup_animations(self):
         # Background Pulse Animation
@@ -179,6 +187,46 @@ class NowPlayingWidget(QWidget):
 
     def update_play_btn(self, is_playing):
         icon = get_icon(SVG_PAUSE if is_playing else SVG_PLAY, "#000"); self.play_btn.setIcon(icon); self.visualizer.set_playing(is_playing); self.bar_vis.set_playing(is_playing)
+
+    def resizeEvent(self, event):
+        """Responsive layout shift for Spotify-grade mobile experience."""
+        w = event.size().width()
+        is_mobile = w < 720
+        
+        if is_mobile != self.is_mobile:
+            self.is_mobile = is_mobile
+            # Re-architecture content layout
+            old_l = self.content_container.layout()
+            if old_l:
+                old_l.removeWidget(self.art_lyrics_stack)
+                old_l.removeWidget(self.info_queue_widget)
+                # Cleanup old layout manually (PyQt requires this for clean reconstruction)
+                from PyQt6 import sip; sip.delete(old_l)
+            
+            if is_mobile:
+                new_l = QVBoxLayout(self.content_container)
+                new_l.setContentsMargins(0, 10, 0, 0); new_l.setSpacing(20)
+                new_l.addWidget(self.art_lyrics_stack, alignment=Qt.AlignmentFlag.AlignCenter)
+                new_l.addWidget(self.info_queue_widget)
+                self.queue_header.hide(); self.up_next_list.hide()
+                self.visualizer.set_size(min(w - 100, 280))
+                self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.artist_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.title_label.setStyleSheet("font-size: 22px; font-weight: 800; color: #FFD700;")
+                self.main_container.layout().setContentsMargins(20, 10, 20, 20)
+            else:
+                new_l = QHBoxLayout(self.content_container)
+                new_l.setContentsMargins(0, 0, 0, 0); new_l.setSpacing(60)
+                new_l.addWidget(self.art_lyrics_stack, stretch=1)
+                new_l.addWidget(self.info_queue_widget, stretch=1)
+                self.queue_header.show(); self.up_next_list.show()
+                self.visualizer.set_size(380)
+                self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                self.artist_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                self.title_label.setStyleSheet("font-size: 32px; font-weight: 800; color: #FFD700;")
+                self.main_container.layout().setContentsMargins(40, 20, 40, 40)
+        
+        super().resizeEvent(event)
 
     def update_progress(self, current_ms):
         self.progress_slider.setValue(current_ms); m, s = divmod(current_ms // 1000, 60); self.current_time_label.setText(f"{m}:{s:02d}")
